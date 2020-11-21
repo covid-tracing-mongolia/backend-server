@@ -1,201 +1,126 @@
-[La version française suit.](#serveur-de-diagnostic-covid-shield)
+# COVID Tracing Mongolia - Үндсэн backend service
 
-# COVID Alert Diagnosis Server
+Apache 2.0 лицензийн дагуу доорх нээлттэй эхийн төслүүд дээр үндэслэн хийв:
 
-Adapted from <https://github.com/CovidShield/server>
+1. https://github.com/cds-snc/covid-alert-app
+2. https://github.com/CovidShield/mobile
 
-This repository implements a diagnosis server to use as a server for Apple/Google's [Exposure
-Notification](https://covid19.apple.com/contacttracing) framework, informed by the [guidance
-provided by Canada's Privacy
-Commissioners](https://priv.gc.ca/en/opc-news/speeches/2020/s-d_20200507/).
+Энэхүү репо нь Apple болон Google компаниудаас гаргасан [Exposure Notification API](https://www.apple.com/covid19/contacttracing) технологийн дагуу хэрэглэгчдэд хэрэглүүлэх, React Native технологи дээр суурилсан гар утасны апп-н ард талд ажилладаг үндсэн backend сервис юм.
 
-The choices made in implementation are meant to maximize privacy, security, and performance. No
-personally-identifiable information is ever stored, and nothing other than IP address is available to the server. No data at all is retained past 21 days. This server is designed to handle
-use by up to 38 million Canadians, though it can be scaled to any population size.
+Хэрэглэгчийн хувь хүний мэдээллийн нууцлал, аюулгүй байдал болон найдвартай ажиллагааг хангах үүднээс маш сайн анхаарч зохион бүтээгдэж, бичигдсэн систем болно. Энэхүү систем нь Google, Apple-аас гаргасан Exposure Notification API технологийн журмын дагуу хувь хүнтэй холбоотой ямар ч мэдээллийг хадгалахгүй. Хэрэглэгчдийн хандаж буй Public IP хаягийн мэдээлэл л сервэр дээр ирэх бөгөөд энэ нь бусад аль ч интернэтийн орчинд байдаг нийтлэг зүйл билээ. Ямар ч мэдээлэл 21 хоногоос дээш хугацаанд хадгалагдахгүй. 
 
-In this document:
+Энэхүү баримтад::
 
-- [Overview](#overview)
-   - [Retrieving diagnosis keys](#retrieving-diagnosis-keys)
-   - [Retrieving Exposure Configuration](#retrieving-exposure-configuration)
-   - [Submitting diagnosis keys](#submitting-diagnosis-keys)
-- [Data usage](#data-usage)
-- [Generating one-time codes](#generating-one-time-codes)
-- [Protocol documentation](#protocol-documentation)
-- [Deployment notes](#deployment-notes)
-- [Metrics and Tracing](#metrics-and-tracing)
-- [Contributing](#contributing)
-- [Who Built COVID Alert?](#who-built-covid-alert)
+- [Ерөнхий](#Ерөнхий)
+   - [Оношилгооны түлхүүр авах](#Оношилгооны-түлхүүрийг-авах)
+   - [Хавьталтын тохиргооны мэдээллийг авах](#Хавьталтын-тохиргооны-мэдээллийг-авах)
+   - [Оношилгооны түлхүүр оруулах](#Оношилгооны-түлхүүр-оруулах)
+- [Дата Хэрэглээ](#Дата-Хэрэглээ)
+- [Нэг Удаагийн Код Гаргаж Авах](#Нэг-Удаагийн-Код-Гаргаж-Авах)
+- [Системийн Протоколын Талаар](#Системийн-Протоколын-Талаар)
+- [Deploy Хийх Талаар](#Deploy-Хийх-Талаар)
+- [Системийн Тоо Баримт болон Шинжилгээ](#Системийн-Тоо-Баримт-болон-Шинжилгээ)
+- [Энэ Төсөлд Хувь Нэмрээ Оруулах](#Энэ-Төсөлд-Хувь-Нэмрээ-Оруулах)
+- [Энэ Системийг Хэн Хийсэн Бэ?](#Энэ-Системийг-Хэн-Хийсэн-Бэ-?)
 
 ## Overview
 
-_[Apple/Google's Exposure Notification](https://covid19.apple.com/contacttracing) specifications
-provide important information to contextualize the rest of this document._
+[Apple/Google's Exposure Notification](https://covid19.apple.com/contacttracing) талаарх баримт бичиг нь энэ баримт бичгийг ойлгоход маш хэрэгтэй мэдээллүүд агуулсан байгаа тул эхлээд та Google, Apple аас гаргасан Exposure Notification API-н талаар уншсан байх хэрэгтэй гэдгийг анхааруулая. Тэгсэн тохиолдолд мэдээллийн нууцлал, технологийн ажиллагааны талаарх бүх дэлгэрэнгүй мэдээллийг авчихсан байна гэсэн үг юм.
 
-There are two fundamental operations conceptually:
+Ерөнхийдөө бол 2 үндсэн ажиллагаанаас бүрдэнэ:
 
-* **Retrieving diagnosis keys**: retrieving a list of all keys uploaded by other users; and
-* **Submitting diagnosis keys**: sharing keys returned from the EN framework with the server.
+* **Оношилгооны түлхүүр авах**: Бусад хэрэглэгчдийн оношилгооны түлхүүрийн мэдээллийн жагсаалтыг авах; мөн
+* **Оношилгооны түлхүүр оруулах**: Хэрэглэгчдийн утсан дээр ажилладаг (апп-аас  гадуур) Exposure Notification технологи-д  байрлаж буй оношилгооны түлхүүрийг сервис рүү апп аар дамжуулан оруулах.
 
-These two operations are implemented as two separate servers (`key-submission` and `key-retrieval`)
-generated from this codebase, and can be deployed independently as long as they share a database. It
-is also possible to deploy any number of configurations for each of these components, connected to
-the same database, though there would be little value in deploying multiple configurations of
-`key-retrieval`.
+Тиймээс энэ 2 чухал үйлдлийг тусад нь салгаж `key-submission` болон `key-retrieval` гэсэн 2 сервис болгон хөгжүүлсэн байгаа. Энэ 2 сервис нь тус тусдаа deploy хийгдэх боломжтой. Гагцхүү дундаа 1 үндсэн өгөгдлийн бааз-тай ажиллах ёстой. 
 
-For a more technical overview of the codebase, especially of the protocol and database schema, see
-[this video](https://www.youtube.com/watch?v=5GNJo1hEj5I).
+Системийн кодчлолын талаар дэлгэрэнгүй мэдээлэл авахыг хүсвэл анхны нээлттэй эхийн төслийн зохион бүтээгч, хөгжүүлэгчдийн нэгийн танилцуулга видео-г дараах линкээр орж үзээрэй. Англи хэл дээр бий: https://www.youtube.com/watch?v=5GNJo1hEj5I.
 
-### Retrieving diagnosis keys
+### Оношилгооны түлхүүр авах
 
-When diagnosis keys are uploaded, the `key-submission` server stores the data defined and required
-by the Exposure Notification API in addition to the time at which the data was received by the
-server. This submission timestamp is rounded to the nearest hour for privacy preservation (to
-prevent correlation of multiple keys to the same user).
+Хэрэглэгчийн COVID шинжилгээ ЭЕРЭГ гарснаар тухайн хэрэглэгч нь албан ёсны, эрх бүхий байгууллагаас авсан кодыг гар утас дээр байгаа апп дотроо оруулж өгсөнөөр тухайн хэрэглэгчийн утсан дээр цугларсан, өмнөх 14 хоногийн оношилгооны түлхүүрүүд `key-submission` сервис руу очино гэсэн үг. Энэ мэдээллийг сервис нь хүлээн авсан цаг хугацааны хамтаар тэмдэглэж, хадгалж авна. Олон түлхүүрээр дамжуулан хэрэглэгчийг таньж болох магадлалыг байхгүй болгохын тулд цаг хугацааны нарийвчлалыг хамгийн ойр байх цаг-т хамааруулна гэсэн үг.
 
-The hour of submission is used to group keys into buckets, in order to prevent clients ([COVID Alert mobile app](https://github.com/cds-snc/covid-alert-app)) from having to download a given set of key data
-multiple times in order to repeatedly check for exposure.
+Ойролцоо хугацаанд олон хэрэглэгчид оношилгдож, оношилгооны түлхүүрүүдээ сервисрүү явуулахаар бол цаг, цагаар нь бүлэглэн тухайн цагт ирсэн авсан бүх түлхүүрүүдийг нэг дор оруулна гэсэн үг. Ингэснээр ухаалаг утсан дээр ажиллаж буй апп нь цуварсан байдлаар ойрхон ойрхон, олон дахин шалгах шаардлагагүй болно гэсэн үг юм.
 
-The published diagnosis keys are fetched—with some best-effort authentication—from a Content
-Distribution Network (CDN), backed by `key-retrieval`. This allows a functionally-arbitrary number
-of concurrent users.
+Олон хэрэглэгчдийн утсан дээр эдгээр оношилгооны түлхүүрүүд татагдах боломжтой учир найдвартай ажиллагаа үүднээс Content Distribution Network (CDN) ашиглавал зохистой. Түүний ард нь `key-retrieval` сервис нь ажиллаж байна гэсэн үг.
 
-### Retrieving _Exposure Configuration_
+### Хавьталтын тохиргооны мэдээллийг авах
 
-[_Exposure Configuration_](https://developer.apple.com/documentation/exposurenotification/enexposureconfiguration),
-used to determine the risk of a given exposure, is also retrieved from the `key-retrieval` server. A JSON
-document describing the current exposure configuration for a given region is available at the path
-`/exposure-configuration/<region>.json`, e.g. for Ontario (region `ON`):
+[_Хавьталтын тохиргооны мэдээлэл_](https://developer.apple.com/documentation/exposurenotification/enexposureconfiguration) нь хавьталтын зэрэг, түүний эрсдлийн зэргийг тодорхойлоход чухал үүрэг гүйцэтгэдэг тохиргоо юм. Энэ мэдээллийг `key-retrieval` сервисээр дамжуулан хэрэглэгчдийн утсан дээр байгаа апп татаж авна. Жишээ нь:
+
+Өнгөрсөн 14 хоног дотор миний ямар нэг байдлаар ойртсон / хавьтсан хүн COVID шинжилгээ өгөөд ЭЕРЭГ гарсан байга гэж үзье. Тэгээд миний утсанд апп аар маань дамжуулаад анхааруулга иржээ. Тэгвэл би тэр хүнтэй хэр ойрхон байсан, хэдий хугацаанд ойрхон байсан зэрэг мэдээлэл дээр үндэслэн эрсдлийн зэргийг тодорхойлоход туслалцаа үзүүлдэг тохиргоо гэсэн үг юм. 
 
 ```sh
-$ curl https://retrieval.covidshield.app/exposure-configuration/ON.json
+$ curl https://KeyRetrievalServiceBackendDNS/exposure-configuration/exposure-notification.json
 {"minimumRiskScore":0,"attenuationLevelValues":[1,2,3,4,5,6,7,8],"attenuationWeight":50,"daysSinceLastExposureLevelValues":[1,2,3,4,5,6,7,8],"daysSinceLastExposureWeight":50,"durationLevelValues":[1,2,3,4,5,6,7,8],"durationWeight":50,"transmissionRiskLevelValues":[1,2,3,4,5,6,7,8],"transmissionRiskWeight":50}
 ```
 
-### Submitting diagnosis keys
+### Оношилгооны түлхүүр оруулах
 
-In brief, upon receiving a positive diagnosis, a health care professional will generate a _One Time
-Code_ through a web application frontend ([COVID Alert Portal](https://github.com/cds-snc/covid-alert-portal)), which
-communicates with `key-submission`. This code is sent to the patient, who enters the code into their
-[COVID Alert mobile app](https://github.com/cds-snc/covid-alert-app). This code is used to authenticate the
-Application (once) to the diagnosis server. Encryption keypairs are exchanged by the Application
-and the `key-submission` server to be stored for fourteen days, and the One Time Code is immediately
-purged from the database.
+Хэрэглэгч COVID шинжилгээ өгөөд ЭЕРЭГ гарсан тохиолдолд албан ёсны, эрх  бүхий байгууллага тухайн хэрэглэгчид _Нэг Удаагийн Код_ гаргаж өгөх юм. Энэ кодыг тухайн байгууллагад зориулан гаргаж өгсөн вэбсайт-аар дамжуулан гаргаж авах юм. Энэ вэбсайт нь цаагуураа `key-submission` гэсэн сервистэй харлцдаг гэсэн үг. Энэ Нэг Удаагийн Код-ыг авсан хэрэглэгч маань тэр кодоо гар утасныхаа апп дотор оруулна. Энэ код гаргаж байгаа гол шалтгаан нь хэрэглэгчид хуурамчаар "COVID туссан" гэж бусад хэрэглэгчдийг үймүүлж, сандаргасан, санаатай буруу, бусармаг үйлдэл хийж, олон нийтийн тайван байдал алдагдуулахаас сэргийлж өгч байгаа юм. Гар утасны апп болон `key-submission` хоорондоо итгэлцэл тогтоосны дараа, энэ итгэлцэл нь 14 хоногийн туршид хадгалагдана. Өөрөөр хэлбэл хэрэглэгч 14 хоногтоо дахин Нэг Удаагийн Код оруулах шаардлагагүй болно гэсэн үг. Харин Нэг Удаагийн Код нь тэр дороо устаж үгүй болно.
 
-These keypairs are used to encrypt and authorize _Diagnosis Key_ uploads for the next fourteen
-days, after which they are purged from the database.
+Дээр дурьдсан итгэлцлээс үүссэн нууц түлхүүр нь цаашид 14 хоногийн туршид орж ирж буй _Оношилгооны Түлхүүрүүдийг_ шалгах, шифрлэхэд хэрэглэгдэх бөгөөд 14 хоногийн дараа устгагдана. Шифрлэхэд хэрэглэж буй схем нь _NaCl Box_ (Curve25519, XSals20, Poly1305). Маш өндөр зэрэглэлийн нууцлалынн алгоритм-д тооцогддог юм. 
 
-The encryption scheme employed for key upload is _NaCl Box_ (a public-key encryption scheme using
-Curve25519, XSalsa20, and Poly1305). This is widely regarded as an exceedingly secure implementation
-of Elliptic-Curve cryptography.
+## Дата Хэрэглээ
 
-## Data usage
+Энэхүү систем нь хэрэглэгчийн дата хэрэглээг маш сайн тооцоолж, хамгийн бага хэрэглээтэй байхаар бодолцож хийсэн. Үүнд:
 
-The _Diagnosis Key_ retrieval protocol used in _COVID Alert_ was designed to restrict the data
-transfer to a minimum. With large numbers of keys and assuming the client fetches using compression,
-there is minimal protocol overhead on top of the key data size of 16 bytes.
+* COVID эерэг оношилогдсон тохиолдол дээд тал нь 28 түлхүүр.
+* Түлхүүрүүд 14 хоногийн турш хадгалагдана.
+* Түлхүүр болгон 18 byte хэмжээтэй.
 
-In all examples below:
+Жишээ нь 2020 оны 11 сарын 21-ний 17:00 цагийн мэдээллээр Монгол Улсад батлагдсан тохиолдол 4 өөр нэмэгдэж 582 болсон. Энэ 4 тохиолдол дээр: 4 x 28 * 18 = 1.9kB (өдөрт). 
 
-* Each case may generate up to 28 keys.
-* Keys are valid and distributed for 14 days.
-* Each key entails just under 18 bytes of data transfer when using compression.
-* Key metadata and protocol overhead should in reality be minimal, but:
-* Assume 50% higher numbers than you see below to be on the safe side. This README will be updated
-  soon with more accurate real-world data sizes.
 
-**Data below is current at May 12, 2020**. For each case, we assume the example daily new cases is a
-steady daily recurrence.
+## Нэг Удаагийн Код Гаргаж Авах
 
-### Deployed only to province of Ontario
+Албан ёсны, эрх бүхий байгууллагын ажилчид COVID Tracing - Mongolia гаргаж өгсөн вэбсайтаар дамжуулан _Нэг Удаагийн Код_ гаргаж авах эрхийг олгодог. Энэхүү вэбсайтыг хэрэглэхийн тулд тухайн ажилчид бас бүртгэлтэй, нэвтрэх эрхтэй байна. Нэг Удаагийн Кодыг COVID эерэг гэсэн хариу авсан хүмүүст утсаар хэлж өгөх юм. 
 
-There were 350 new cases in Ontario on May 10, 2020. 350 * 28 * 18 = 170kB per day, thus, deploying
-to the province of Ontario at current infection rates would cause **7.1kB of download each hour**.
-
-### Deployed to Canada
-
-There were 1100 new cases in Canada on May 10, 2020. 1100 * 28 * 18 = 540kB per day, thus,
-deploying to Canada at current infection rates would cause **23kB of download each hour**.
-
-### Deployed to entire United States of America
-
-There were 18,000 new cases in America on May 10, 2020. 18,000 * 28 * 18 = 8.9MB per day, thus,
-deploying to the all of America at current infection rates would cause: **370kB of download each
-hour**.
-
-### Deployed to entire world
-
-If _COVID Alert_ were deployed for the entire world, we would be inclined to use the "regions"
-built into the protocol to implement key namespacing, in order to not serve up the entire set of
-global diagnosis keys to each and every person in the world, but let's work through the number in
-the case that we wouldn't:
-
-There were 74,000 new cases globally on May 10, 2020. 74,000 * 28 * 16 = 36MB per day, thus,
-deploying to the entire world at current infection rates would cause: **1.5MB of download each
-hour**.
-
-## Generating one-time codes
-
-We use a one-time code generation scheme that allows authenticated case workers to issue codes,
-which are to be passed to patients with positive diagnoses via whatever communication channel is
-convenient.
-
-This depends on a separate service, holding credentials to talk to this (`key-submission`) server.
-We have a sample implementation we will open source soon, but we anticipate that health authorities
-will prefer to integrate this feature into their existing systems. The integration is extremely
-straightforward, and we have [minimal examples in several
-languages](https://github.com/cds-snc/covid-alert-server/tree/master/examples/new-key-claim). Most
-minimally:
+Энэ үйл ажиллагааг хариуцдаг сервис нь `˚key-submission` юм. Вэбсайт нь энэ сервистэй холбогдож ажилладаг. Вэбсайт гэхгүйгээр энгийн түвшин тест хийж, шалгаж үзэх бол: 
 
 ```bash
-curl -XPOST -H "Authorization: Bearer $token" "https://submission.covidshield.app/new-key-claim"
+curl -XPOST -H "Authorization: Bearer $token" "https://BackEndServerIPorDNS:PORT/new-key-claim"
 ```
 
-## Protocol documentation
+## Системийн Протоколын Талаар
 
-For a more in-depth description of the protocol, please see [the "proto" subdirectory of this
-repo](/proto).
+2008 онд Google компаниад гаргасан protobuf ашигласан байгаа. Дэлгэрэнгүй мэдээлэл харахыг хүсвэл: "proto" лүү орж хараарай.
 
-## Deployment notes
+## Deploy Хийх Талаар
 
-- `key-submission` depends on being deployed behind a firewall (e.g. [AWS
-WAF](https://aws.amazon.com/waf/)), aggressively throttling users with 400 and 401 responses.
+- `key-submission` firewall-н ард deploy хийсэн байна гэж тооцоолж байгаа. Тэгж байж хэт их хүсэлт орж ирсэн тохиолдолд 400 болон 401 гэсэн хариулт буцааж хэрэглээг хязгаарлана (жишээ нь [AWS WAF](https://aws.amazon.com/waf/))
 
-- `key-retrieval` assumes it will be deployed behind a caching reverse proxy.
+- `key-retrieval` caching reverse proxy ард deploy хийсэн байна гэж тооцоолж байгаа.
 
 ### Platforms
-
-We hope to provide reference implementations on AWS, GCP, and Azure via [Hashicorp Terraform](https://www.terraform.io/).
 
 [Amazon AWS](config/infrastructure/aws/README.md)
 
 [Kubernetes](deploy/kubernetes/README.md)
 
-## Metrics and Tracing
+## Системийн Тоо Баримт болон Шинжилгээ
 
-COVID Alert uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-go) to configure the metrics and tracing for the server, both the key retrieval and key submission.
+Системийн талаар тоо баримт, шинжилгээнд хэрэгтэй мэдээллийг гаргаж авахын тулд [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-go) технологийг хэрэглэхээр бодож хийсэн байгаа.
 
-### Metrics
+### Тоо Баримт / Metrics
 
-Currently, the following options are supported for enabling Metrics:
+Metric-г дараах байдлаар гаргаж авч болно:
 * standard output
 * prometheus
 
-Metrics can be enabled by setting the `METRIC_PROVIDER` variable to `stdout`, `pretty`, or `prometheus`.
+Энэ тохиргоог асаахын тулд `METRIC_PROVIDER` хувьсагчийг `stdout`, `pretty`, эсвэл `prometheus` гэж тааруулж өгнө.
 
-Both `stdout` and `pretty` will send metrics output to stdout but differ in their formatting. `stdout` will print
-the metrics as JSON on a single line whereas `pretty` will format the JSON in a human-readable way, split across
-multiple lines.
+`stdout` болон `pretty` нь `stdout`-руу мэдээллийг дамжуулдаг ч формат нь өөр, өөр байна. `stdout` JSON форматтай (нэг мөрөнд) бол `pretty` нь хүн уншиж болохуйц JSON форматтай (олон мөрөнд) байдаг юм.
 
-If you want to use Prometheus, please see the additional configuration requirements below.
+хэрэглэхийг хүсч байвал доорх зааварчилгаатай танилцана уу.
 
 #### Prometheus 
 
-In order to use Prometheus as a metrics solution, you'll need to be running it in your environment. 
+Prometheus хэрэглэх хүсэлтэй бол өөрийнхөө сервэр дээр ажиллуулж байх хэрэгтэй.
 
-You can follow the instructions [here](https://prometheus.io/docs/prometheus/latest/installation/) for running Prometheus. 
+[Дэлгэрэнгүй зааварчилгаа](https://prometheus.io/docs/prometheus/latest/installation/).
 
-You will need to edit the configuration file, `prometheus.yml` to add an additional target so it actually polls the metrics coming from the COVID Alert server:
+Нэмэлтээр metric авах хэрэгтэй бол `prometheus.yml` файл дотор target ууд нэмж болно:
 
 ```
 ...
@@ -205,197 +130,28 @@ You will need to edit the configuration file, `prometheus.yml` to add an additio
 
 ### Tracing 
 
-Currently, the following options are supported for enabling Tracing:
+Tracing хийх бол доорх тохиргоог хийж өгнө::
 * standard output
 
-Tracing can be enabled by setting the `TRACER_PROVIDER` variable to `stdout` or `pretty`.
+`TRACER_PROVIDER` => `stdout` эсвэл `pretty`.
 
-Both `stdout` and `pretty` will send trace output to stdout but differ in their formatting. `stdout` will print
-the trace as JSON on a single line whereas `pretty` will format the JSON in a human-readable way, split across
-multiple lines.
+`stdout` болон `pretty` нь `stdout`-руу мэдээллийг дамжуулдаг ч формат нь өөр, өөр байна. `stdout` JSON форматтай (нэг мөрөнд) бол `pretty` нь хүн уншиж болохуйц JSON форматтай (олон мөрөнд) байдаг юм.
 
-Note that logs are emitted to `stderr`, so with `stdout` mode, logs will be on `stderr` and metrics will be on `stdout`.
+Алдаанууд => `stderr`.
 
-## Contributing
+## Энэ Төсөлд Хувь Нэмрээ Оруулах
 
-See the [_Contributing Guidelines_](CONTRIBUTING.md).
+[_Эндээс хараарай_](CONTRIBUTING.md).
 
-## Who Built COVID Alert?
+## Энэ Системийг Хэн Хийсэн Бэ?
 
-COVID Alert was originally developed by [volunteers at Shopify](https://www.covidshield.app/). It was [released free of charge under a flexible open-source license](https://github.com/CovidShield/server).
+COVID Tracing Mongolia нь [CovidShield]((https://www.covidshield.app/)) гэсэн нээлттэй эхийн (Apache 2.0 License) төсөл дээр үндэслэн хийсэн төсөл юм. CovidShield төслийг Канада-д төвтэй Shopify компанийн сайн дурын инженерүүд зохион бүтээж, хөгжүүлсэн байдаг. COVID Tracing Mongolia-г Цар Тахалтай тэмцэж байгаа өнөө үед технологийн салбарт олон жил ажилласаны хувьд улсдаа чадах зүйлээрээ хувь нэмрээ оруулах үүднээс сайн дурын, Монгол мэргэжилтнүүд хөгжүүлсэн юм.
 
-This repository is being developed by the [Canadian Digital Service](https://digital.canada.ca/). We can be reached at <cds-snc@tbs-sct.gc.ca>.
+Холбоо барих хүсэлтэй бол: amarbayar.amarsanaa@gmail.com гэсэн хаягаар холбогдоорой.
 
+## License
+
+### Apache License 2.0
+covid-tracing-mongolia/mobile is licensed under the Apache License 2.0. A permissive license whose main conditions require preservation of copyright and license notices. Contributors provide an express grant of patent rights. Licensed works, modifications, and larger works may be distributed under different terms and without source code.
 ____
 
-# Serveur de diagnostic COVID Alert
-
-Adapté à partir de <https://github.com/CovidShield/server> ([voir les modifications](https://github.com/cds-snc/covid-shield-server/blob/master/FORK.md))
-
-Ce dépôt implémente un serveur de diagnostic à utiliser comme serveur pour le [cadriciel de notification d’exposition](https://covid19.apple.com/contacttracing) d’Apple et de Google, suivant les [directives fournies par les commissaires à la protection de la vie privée du Canada](https://priv.gc.ca/fr/nouvelles-du-commissariat/allocutions/2020/s-d_20200507/).
-
-Les choix faits dans l’implémentation visent à maximiser la confidentialité, la sécurité et le rendement. Les renseignements identificatoires ne sont jamais stockés, et il n’y a que l’adresse IP qui est accessible au serveur. Aucune donnée n’est conservée après 21 jours. Ce serveur est conçu pour gérer jusqu’à 38 millions d’utilisateurs canadiens, même s’il peut être étendu à n’importe quelle taille de population.
-
-Dans la présente documentation :
-
-- [Aperçu](#aperçu)
-   - [Récupération des clés de diagnostic](#récupération-des-clés-de-diagnostic)
-   - [Récupération de la configuration d’exposition](#récupération-de-la-configuration-de-lexposition)
-   - [Envoi des clés de diagnostic](#envoyer-les-clés-de-diagnostic)
-- [Utilisation des données](#utilisation-des-données)
-- [Génération de codes uniques](#génération-de-codes-à-usage-unique)
-- [Documentation du protocole](#documentation-du-protocole)
-- [Remarques de déploiement](#remarques-de-déploiement)
-- [Indicateurs et traçage](#indicateurs-et-traçage)
-- [Contribution](#contribution)
-- [Qui a conçu COVID Alert?](#qui-a-conçu-covid-alert)
-
-## Aperçu
-
-_Les [spécifications de la notification d’exposition d’Apple et de Google](https://covid19.apple.com/contacttracing) fournissent des renseignements importants pour contextualiser le reste de ce document._
-
-Il y a deux opérations fondamentales sur le plan conceptuel :
-
-* **Récupération des clés de diagnostic** : récupération d’une liste de toutes les clés téléversées par d’autres utilisateurs;
-* **Envoi des clés de diagnostic** : partage des clés renvoyées par le cadriciel de notification d’exposition avec le serveur.
-
-Ces deux opérations sont implémentées en tant que deux serveurs distincts (`key-submission` et `key-retrieval`) générés à partir de cette base de code, et peuvent être déployées indépendamment tant qu’elles partagent une base de données. Il est également possible de déployer n’importe quel nombre de configurations pour chacun de ces composants, connectés à la même base de données, même s’il y aurait peu d’utilité à déployer plusieurs configurations de `key-retrieval`.
-
-Pour une vue d’ensemble technique du code de base, particulièrement du protocole et du schéma de base de données, voir [cette vidéo](https://www.youtube.com/watch?v=5GNJo1hEj5I).
-
-### Récupération des clés de diagnostic
-
-Au moment du téléversement des clés de diagnostic, le serveur `key-submission` stocke les données définies et requises par l’interface de programmation d’applications (API) de notification d’exposition en plus de la date à laquelle les données ont été reçues par le serveur. L’horodatage de cet envoi est arrondi à l’heure la plus proche pour la protection de la vie privée (pour empêcher la corrélation de plusieurs clés avec le même utilisateur).
-
-L’heure d’envoi est utilisée pour regrouper les clés en compartiments, afin d’empêcher que les clients ([l’application mobile _COVID Alert_](https://github.com/cds-snc/covid-alert-app)) aient à télécharger un certain ensemble de données de clés plusieurs fois pour pouvoir vérifier l’exposition de manière répétée.
-
-Les clés de diagnostic publiées sont extraites (avec une authentification optimisée) à partir d’un réseau de distribution du contenu (RDC), soutenu par `key-retrieval`. Cela permet un nombre fonctionnellement arbitraire d’utilisateurs simultanés.
-
-### Récupération de la _configuration de l’exposition_
-
-[_La configuration de l’exposition_](https://developer.apple.com/documentation/exposurenotification/enexposureconfiguration), utilisée pour déterminer le risque d’une exposition donnée, est également récupérée sur le serveur `key-retrieval`. Un document JSON décrivant la configuration d’exposition actuelle pour une région donnée est disponible par le chemin `/exposure-configuration/<region>.json`, par exemple pour l’Ontario (région `ON`) :
-
-```sh
-$ curl https://retrieval.covidshield.app/exposure-configuration/ON.json
-{"minimumRiskScore":0,"attenuationLevelValues":[1,2,3,4,5,6,7,8],"attenuationWeight":50,"daysSinceLastExposureLevelValues":[1,2,3,4,5,6,7,8],"daysSinceLastExposureWeight":50,"durationLevelValues":[1,2,3,4,5,6,7,8],"durationWeight":50,"transmissionRiskLevelValues":[1,2,3,4,5,6,7,8],"transmissionRiskWeight":50}
-```
-
-### Envoyer les clés de diagnostic
-
-En bref, lorsque qu’un diagnostic positif est établi, le professionnel de la santé générera un _code à usage unique_ avec une application Web frontale ([COVID Alert Portal](https://github.com/cds-snc/covid-alert-portal)) qui communique avec `key-submission`. Ce code est envoyé au patient, qui entre le code dans son [application mobile _COVID Alert_](https://github.com/cds-snc/covid-alert-app). Ce code est utilisé pour authentifier l’application (une fois) vis-à-vis le serveur de diagnostic. Les paires de clés de chiffrement sont échangées par l’application et le serveur `key-submission` et sont stockée pendant quatorze jours, et la base de données est immédiatement purgée du code à usage unique.
-
-Ces paires de clés sont utilisées pour chiffrer et autoriser les téléversements de _clé de diagnostic_ pendant les quatorze jours qui suivent, après quoi elles sont enlevées de la base de données.
-
-Le schéma de chiffrement utilisé pour le téléchargement de clés est _NaCl Box_ (un schéma de chiffrement de clé publique utilisant Curve25519, XSalsa20 et Poly1305). Il s’agit d’une implémentation considérée extrêmement sécuritaire de la cryptographie à courbe elliptique.
-
-## Utilisation des données
-
-Le protocole de récupération des _clés de diagnostic_ utilisé dans _COVID Alert_ a été conçu pour limiter le transfert de données à un minimum. Considérant le grand nombre de clés, et en supposant que le client les extraie en utilisant la compression, il y a un surdébit de protocole minimal en plus de la taille des données de clé de 16 octets.
-
-Dans tous les exemples ci-dessous :
-
-* Chaque cas peut générer jusqu’à 28 clés.
-* Les clés sont valides et distribuées pendant 14 jours.
-* Chaque clé implique un peu moins de 18 octets de transfert de données pendant l’utilisation de la compression.
-* Les métadonnées et le surdébit de protocole des clés devraient en réalité être minimes, mais : 
-* Supposez que les nombres sont 50 % plus élevés que ce qui se trouve ci-dessous pour plus de sûreté. Ce fichier Readme sera mis à jour bientôt avec des tailles de données réelles plus précises.
-
-**Les données ci-dessous datent du 12 mai 2020**. Pour chaque cas, nous supposons que les exemples de nouveaux cas recensés sont une récurrence quotidienne constante.
-
-### Déployé uniquement dans la province d’Ontario
-
-Il y a eu 350 nouveaux cas en Ontario le 10 mai 2020 : 350 * 28 * 18 = 170 ko par jour. Ainsi, un déploiement dans la province de l’Ontario au taux d’infection actuel engendrerait **7,1 ko de téléchargement par heure**.
-
-### Déployé au Canada
-
-Le 10 mai 2020, il y a eu 1100 nouveaux cas au Canada : 1100 * 28 * 18 = 540 ko par jour. Ainsi, le déploiement au Canada au taux d’infection actuel entraînerait **23 ko de téléchargement par heure**.
-
-### Déployé dans l’ensemble des États-Unis d’Amérique
-
-Il y a eu 18 000 nouveaux cas aux États-Unis le 10 mai 2020 : 18 000 * 28 * 18 = 8,9 mégaoctets [Mo] par jour. Ainsi, le déploiement dans l’ensemble des États-Unis au taux d’infection actuel entraînerait **370 ko de téléchargement par heure**.
-
-### Déployé dans le monde entier
-
-Si _COVID Alert_ était déployé dans le monde entier, nous serions enclins à utiliser les « régions » conçues dans le protocole pour établir des espaces de noms pour les clés, afin de ne pas desservir l’ensemble des clés de diagnostic mondiales pour chaque personne dans le monde. Passons cependant en revue les chiffres au cas où nous ne le ferions pas : 
-
-Le 10 mai 2020, il y a eu 74 000 nouveaux cas dans le monde : 74 000 * 28 * 16 = 36 Mo par jour. Ainsi, le déploiement dans le monde entier au taux d’infection actuel entraînerait **1,5 Mo de téléchargement par heure**.
-
-## Génération de codes à usage unique
-
-Nous utilisons un système de génération de codes à usage unique qui permet aux professionnels authentifiés d’émettre des codes. Ces codes doivent être transmis aux patients présentant un diagnostic positif par l’intermédiaire de n’importe quel canal de communication pratique.
-
-Cette démarche dépend d’un service différent, qui détient des justificatifs pour communiquer avec ce serveur (`key-submission`).
-Nous avons une implémentation à titre d’exemple dont le code source sera bientôt ouvert. Cependant, nous nous attendons à ce que les autorités sanitaires préfèrent intégrer cette fonctionnalité dans leurs systèmes existants. L’intégration est extrêmement simple, et on dispose [d’exemples en plusieurs languages](https://github.com/cds-snc/covid-alert-server/tree/master/examples/new-key-claim). Au minimum :
-
-```bash
-curl -XPOST -H "Authorization: Bearer $token" "https://submission.covidshield.app/new-key-claim"
-```
-
-## Documentation du protocole
-
-Pour une description détaillée du protocole, veuillez consulter [le sous-répertoire « proto » de ce dépôt](/proto).
-
-## Remarques de déploiement
-
-- `key-submission` dépend du déploiement derrière un pare-feu (par exemple [AWS WAF](https://aws.amazon.com/waf/), ce qui freine les utilisateurs de manière agressive par des réponses 400 et 401.
-
-- `key-retrieval` suppose un déploiement derrière un proxy inverse de mise en cache.
-
-### Plateformes
-
-Nous espérons fournir des implémentations de référence sur AWS, GCP et Azure par [Hashicorp Terraform](https://www.terraform.io/).
-
-[Amazon AWS](config/infrastructure/aws/README.md)
-
-[Kubernetes](deploy/kubernetes/README.md)
-
-## Indicateurs et traçage
-
-COVID Alert utilise [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-go) pour configurer les indicateurs et le traçage du serveur, à la fois pour la récupération et l’envoi des clés.
-
-### Indicateurs 
-
-Actuellement, les options suivantes sont prises en charge pour activer les indicateurs :
-* données de sortie standard
-* prometheus
-
-Les indicateurs peuvent être activés en définissant la variable `METRIC_PROVIDER` sur `stdout`, `pretty`, ou `prometheus`.
-
-Aussi bien `stdout` que `pretty enverront les indicateurs de sortie à `stdout`, mais leur mise en forme diffère. `stdout` imprimera les indicateurs en tant que JSON sur une seule ligne, tandis que `pretty` formatera le JSON de manière lisible pour les humains, avec une séparation sur plusieurs lignes.
-
-Si vous voulez utiliser Prometheus, veuillez consulter les exigences de configuration supplémentaires ci-dessous.
-
-#### Prometheus 
-
-Pour utiliser Prometheus comme solution d’indicateurs, vous devez l’exécuter dans votre environnement. 
-
-Vous pouvez suivre les instructions [ici](https://prometheus.io/docs/prometheus/latest/installation/) pour exécuter Prometheus. 
-
-Vous devrez éditer le fichier de configuration `prometheus.yml` pour ajouter une cible supplémentaire afin qu’il interroge réellement les indicateurs provenant du serveur COVID Alert :
-
-```
-...
-    static_configs:
-    - targets: ['localhost:9090', 'localhost:2222']
-```
-
-### Traçage  
-
-Actuellement, les options suivantes sont prises en charge pour activer le traçage :
-* données de sortie standard
-
-Le traçage peut être activé en définissant la variable `TRACER_PROVIDER` sur `stdout` ou `pretty`.
-
-Aussi bien `stdout` que `pretty` enverront le traçage de sortie à `stdout`, mais leur mise en forme diffère. `stdout` imprimera le traçage en tant que JSON sur une seule ligne, tandis que `pretty` formatera le JSON de manière lisible pour les humains, avec une séparation sur plusieurs lignes.
-
-Notez que les journaux sont émis en mode `stderr`, de sorte qu’avec le mode `stdout`, les journaux seront en mode `stderr` et les indicateurs seront en mode `stdout`.
-
-## Contribution
-
-Consultez les [_Directives de contribution_](CONTRIBUTING.md).
-
-## Qui a conçu COVID Alert?
-
-COVID Alert a été développé à l’origine par [des bénévoles de Shopify](https://www.covidshield.app/). Il a été [diffusé gratuitement en vertu d’une licence ouverte flexible](https://github.com/CovidShield/server).
-
-Ce dépôt est maintenu par le [Service numérique canadien](https://numerique.canada.ca/). Vous pouvez nous joindre à <cds-snc@tbs-sct.gc.ca>.

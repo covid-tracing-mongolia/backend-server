@@ -82,14 +82,14 @@ func TestMalformedAuthHeaderNoSpace(t *testing.T) {
 	defer func() { log = *oldLog }()
 	// Auth Mock
 
-	auth.On("RegionFromAuthHeader", "Bearerthisisaverylongtoken").Return("", "", false)
+	auth.On("RegionFromAuthHeader", "BearerTokenUsedToVerifyClaimRequest").Return("", "", false)
 
 	var resp *httptest.ResponseRecorder
 	var req *http.Request
 
 	// Malformed auth header - No space
 	req, _ = http.NewRequest("POST", "/new-key-claim", nil)
-	req.Header.Set("Authorization", "Bearerthisisaverylongtoken")
+	req.Header.Set("Authorization", "BearerTokenUsedToVerifyClaimRequest")
 	resp = httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 
@@ -239,14 +239,14 @@ func TestMalformedAuthHeader_Bear(t *testing.T)  {
 	auth := &keyclaim.Authenticator{}
 
 	// Auth Mock
-	auth.On("RegionFromAuthHeader", "Bear thisisaverylongtoken").Return("", "", false)
+	auth.On("RegionFromAuthHeader", "Bear TokenUsedToVerifyClaimRequest").Return("", "", false)
 
 	router := buildNewKeyClaimServletRouter(db, auth)
 	hook, oldLog := testhelpers.SetupTestLogging(&log)
 	defer func() { log = *oldLog }()
 
 	req, _ := http.NewRequest("POST", "/new-key-claim", nil)
-	req.Header.Set("Authorization", "Bear thisisaverylongtoken")
+	req.Header.Set("Authorization", "Bear TokenUsedToVerifyClaimRequest")
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 
