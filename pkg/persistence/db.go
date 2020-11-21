@@ -239,10 +239,13 @@ func (c *conn) saveNewKeyClaimEvent(ctx context.Context, originator string, rege
 // randomizes which charater set to use. Then passes that character
 // set and the desired length in another function to generate the
 // string for that group.
+// 2020-11-21
+// Amarbayar: Making it convenient for Mongolians so that health 
+// authorities only pronounce numbers and patiens submit numbers
 func generateOneTimeCode() (string, error) {
 	characterSets := [2][]rune{
-		[]rune("AEFHJKLQRSUWXYZ"),
-		[]rune("2456789"),
+		[]rune("13579"),
+		[]rune("02468"),
 	}
 
 	characterSetLength := int64(len(characterSets))
