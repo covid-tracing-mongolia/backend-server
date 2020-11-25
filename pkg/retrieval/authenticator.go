@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	"github.com/cds-snc/covid-alert-server/pkg/timemath"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/timemath"
 )
 
 type Authenticator interface {

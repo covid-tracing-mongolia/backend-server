@@ -3,7 +3,7 @@ package telemetry
 import (
 	"context"
 
-	"github.com/cds-snc/covid-alert-server/pkg/persistence"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"

@@ -5,10 +5,10 @@ package mocks
 import (
 	context "context"
 
-	covidshield "github.com/cds-snc/covid-alert-server/pkg/proto/covidshield"
+	covidshield "github.com/covid-tracing-mongolia/backend-server/pkg/proto/covidshield"
 	mock "github.com/stretchr/testify/mock"
 
-	persistence "github.com/cds-snc/covid-alert-server/pkg/persistence"
+	persistence "github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
 
 	time "time"
 )

@@ -2,8 +2,8 @@ package app
 
 import (
 	"github.com/Shopify/goose/srvutil"
-	"github.com/cds-snc/covid-alert-server/pkg/server"
-	"github.com/cds-snc/covid-alert-server/pkg/testhelpers"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/server"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/testhelpers"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

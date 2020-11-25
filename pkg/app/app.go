@@ -9,12 +9,12 @@ import (
 	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/srvutil"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	"github.com/cds-snc/covid-alert-server/pkg/keyclaim"
-	"github.com/cds-snc/covid-alert-server/pkg/persistence"
-	"github.com/cds-snc/covid-alert-server/pkg/retrieval"
-	"github.com/cds-snc/covid-alert-server/pkg/server"
-	"github.com/cds-snc/covid-alert-server/pkg/workers"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/retrieval"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/server"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/workers"
 )
 
 var (

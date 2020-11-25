@@ -1,4 +1,4 @@
-module github.com/cds-snc/covid-alert-server
+module github.com/covid-tracing-mongolia/backend-server
 
 go 1.14
 

@@ -1,10 +1,10 @@
 package server
 
 import (
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	"github.com/cds-snc/covid-alert-server/pkg/keyclaim"
-	"github.com/cds-snc/covid-alert-server/pkg/persistence"
-	pb "github.com/cds-snc/covid-alert-server/pkg/proto/covidshield"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
+	pb "github.com/covid-tracing-mongolia/backend-server/pkg/proto/covidshield"
 	"io/ioutil"
 	"net/http"
 	"regexp"

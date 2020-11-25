@@ -32,7 +32,7 @@ If you'd like to contribute a documentation or static file change, feel free to 
 
 #### Development environment via docker-compose
 
-1. Fork https://github.com/cds-snc/covid-alert-server to your account.
+1. Fork https://github.com/covid-tracing-mongolia/backend-server to your account.
 2. Clone your fork of the **cds-snc/covid-alert-server** repo locally by running `git clone https://github.com/<username>/covid-alert-server.git`.
 3. Enter the repo directory `cd server`.
 4. Run `docker-compose up`.
@@ -131,7 +131,7 @@ Si vous souhaitez contribuer à une modification de la documentation ou de fichi
 
 #### Environnement de développement par l’intermédiaire de docker-compose
 
-1. Fourchez https://github.com/cds-snc/covid-alert-server à votre compte.
+1. Fourchez https://github.com/covid-tracing-mongolia/backend-server à votre compte.
 2. Clonez localement votre fourche du dépôt **cds-snc/covid-alert-server** en exécutant localement un `git clone https://github.com/<username>/covid-alert-server.git`.
 3. Entrez le répertoire `cd server` du dépôt.
 4. Exécutez `docker-compose up`.

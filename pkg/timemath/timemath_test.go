@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/cds-snc/covid-alert-server/pkg/proto/covidshield"
+	pb "github.com/covid-tracing-mongolia/backend-server/pkg/proto/covidshield"
 	"github.com/stretchr/testify/assert"
 )
 

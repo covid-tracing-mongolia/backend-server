@@ -1,4 +1,4 @@
-MODULE := github.com/cds-snc/covid-alert-server
+MODULE := github.com/covid-tracing-mongolia/backend-server
 
 CMDS := key-submission key-retrieval monolith
 

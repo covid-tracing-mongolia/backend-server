@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/cds-snc/covid-alert-server/pkg/app"
-	"github.com/cds-snc/covid-alert-server/pkg/cmd"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/app"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/cmd"
 )
 
 func main() {

@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	"github.com/cds-snc/covid-alert-server/pkg/keyclaim"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
 	"os"
 	"strings"
 	"testing"
