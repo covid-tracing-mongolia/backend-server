@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
 )
 
 func countUnclaimedEncryptionKeysByOriginator(db *sql.DB) ([]CountByOriginator, error) {

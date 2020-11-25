@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cds-snc/covid-alert-server/pkg/persistence"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
 
 	"github.com/Shopify/goose/logger"
 	"go.opentelemetry.io/otel/api/correlation"

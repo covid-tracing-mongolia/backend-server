@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 

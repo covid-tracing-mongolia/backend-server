@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
-	"github.com/cds-snc/covid-alert-server/pkg/app"
-	"github.com/cds-snc/covid-alert-server/pkg/telemetry"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/app"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/telemetry"
 )
 
 var log = logger.New("cmd")

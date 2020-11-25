@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/cds-snc/covid-alert-server/pkg/server"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/server"
 	"os"
 )
 

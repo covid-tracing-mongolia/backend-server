@@ -2,14 +2,14 @@ package server
 
 import (
 	"errors"
-	"github.com/cds-snc/covid-alert-server/pkg/testhelpers"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/testhelpers"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
-	pb "github.com/cds-snc/covid-alert-server/pkg/proto/covidshield"
-	"github.com/cds-snc/covid-alert-server/pkg/telemetry"
+	pb "github.com/covid-tracing-mongolia/backend-server/pkg/proto/covidshield"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/telemetry"
 	"github.com/Shopify/goose/logger"
 	"github.com/Shopify/goose/safely"
 	"github.com/Shopify/goose/srvutil"

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	"github.com/cds-snc/covid-alert-server/pkg/timemath"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/timemath"
 	"github.com/Shopify/goose/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"

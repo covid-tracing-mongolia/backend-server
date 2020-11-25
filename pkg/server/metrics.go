@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Shopify/goose/srvutil"
-	"github.com/cds-snc/covid-alert-server/pkg/keyclaim"
-	"github.com/cds-snc/covid-alert-server/pkg/persistence"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
 	"github.com/gorilla/mux"
 
 	"context"

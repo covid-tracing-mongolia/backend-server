@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cds-snc/covid-alert-server/pkg/config"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
 )
 
 type Authenticator interface {

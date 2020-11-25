@@ -13,9 +13,9 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Shopify/goose/logger"
-	"github.com/cds-snc/covid-alert-server/pkg/config"
-	pb "github.com/cds-snc/covid-alert-server/pkg/proto/covidshield"
-	"github.com/cds-snc/covid-alert-server/pkg/timemath"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
+	pb "github.com/covid-tracing-mongolia/backend-server/pkg/proto/covidshield"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/timemath"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"

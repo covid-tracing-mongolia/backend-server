@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/cds-snc/covid-alert-server/pkg/testhelpers"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/testhelpers"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

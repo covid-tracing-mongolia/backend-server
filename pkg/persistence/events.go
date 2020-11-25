@@ -8,7 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/cds-snc/covid-alert-server/pkg/keyclaim"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
 )
 
 // Event the event that we are to log

@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	keyclaim "github.com/cds-snc/covid-alert-server/mocks/pkg/keyclaim"
-	persistence "github.com/cds-snc/covid-alert-server/mocks/pkg/persistence"
-	persistence2 "github.com/cds-snc/covid-alert-server/pkg/persistence"
+	keyclaim "github.com/covid-tracing-mongolia/backend-server/mocks/pkg/keyclaim"
+	persistence "github.com/covid-tracing-mongolia/backend-server/mocks/pkg/persistence"
+	persistence2 "github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )

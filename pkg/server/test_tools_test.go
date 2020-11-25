@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	keyclaim "github.com/cds-snc/covid-alert-server/mocks/pkg/keyclaim"
-	persistence "github.com/cds-snc/covid-alert-server/mocks/pkg/persistence"
-	"github.com/cds-snc/covid-alert-server/pkg/testhelpers"
+	keyclaim "github.com/covid-tracing-mongolia/backend-server/mocks/pkg/keyclaim"
+	persistence "github.com/covid-tracing-mongolia/backend-server/mocks/pkg/persistence"
+	"github.com/covid-tracing-mongolia/backend-server/pkg/testhelpers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
