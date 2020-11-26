@@ -8,8 +8,8 @@ on:
 env:
   GITHUB_SHA: ${{ github.sha }}
   BRANCH: ${{ github.ref }}
-  DOCKERDOCKERHUB_OWNER: covidmongolia
-  DOCKERDOCKERHUB_REPO: backend-server
+  DOCKERHUB_OWNER: covidmongolia
+  DOCKERHUB_REPO: backend-server
 
 jobs:
   build-n-push:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Login to Docker Hub
         run: |
-          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u $DOCKERDOCKERHUB_OWNER --password-stdin
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u $DOCKERHUB_OWNER --password-stdin
 
       - name: Build & Push Key Retrieval
         env:
