@@ -25,10 +25,9 @@ RUN adduser \
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="${GOLDFLAGS}" -o server ./cmd/${component}
-
-RUN mkdir /etc/aws-certs
-RUN wget -P /etc/aws-certs https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="${GOLDFLAGS}" -o server ./cmd/${component} && \
+    mkdir /etc/aws-certs && \
+    wget -P /etc/aws-certs https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem
 
 ###
 # Step 2 - Build
