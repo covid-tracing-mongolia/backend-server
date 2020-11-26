@@ -2,125 +2,42 @@ name: Build and Push to Container Registries
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
 
 env:
   GITHUB_SHA: ${{ github.sha }}
   BRANCH: ${{ github.ref }}
+  DOCKERDOCKERHUB_OWNER: covidmongolia
+  DOCKERDOCKERHUB_REPO: backend-server
 
 jobs:
   build-n-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Configure Staging AWS credentials
-        id: aws-staging
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ca-central-1
+      - name: Login to Docker Hub
+        run: |
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u $DOCKERDOCKERHUB_OWNER --password-stdin
 
-      - name: Login to Staging Amazon ECR
-        id: login-ecr-staging
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build Key Retrieval
+      - name: Build & Push Key Retrieval
         env:
-          STG_ECR_REGISTRY: ${{ steps.login-ecr-staging.outputs.registry }}
-          PROD_ECR_REGISTRY: ${{ secrets.PROD_ECR_REGISTRY }}
-          DEMO_ECR_REGISTRY: ${{ secrets.DEMO_ECR_REGISTRY}}
-          ECR_REPOSITORY: covid-server/key-retrieval
           COMPONENT: key-retrieval
         run: |
           docker build --build-arg branch=$BRANCH --build-arg revision=$GITHUB_SHA --build-arg component=$COMPONENT \
-          -t $DEMO_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $STG_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $PROD_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $DEMO_ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $STG_ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $PROD_ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          -t $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-$GITHUB_SHA \
+          -t $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-latest .
+          docker push $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-$GITHUB_SHA
+          docker push $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-latest
 
-      - name: Build Key Submission
+      - name: Build & Push Key Submission
         env:
-          STG_ECR_REGISTRY: ${{ steps.login-ecr-staging.outputs.registry }}
-          PROD_ECR_REGISTRY: ${{ secrets.PROD_ECR_REGISTRY }}
-          DEMO_ECR_REGISTRY: ${{ secrets.DEMO_ECR_REGISTRY}}
-          ECR_REPOSITORY: covid-server/key-submission
-          GITHUB_SHA: ${{ github.sha }}
-          BRANCH: ${{ github.ref }}
           COMPONENT: key-submission
         run: |
           docker build --build-arg branch=$BRANCH --build-arg revision=$GITHUB_SHA --build-arg component=$COMPONENT \
-          -t $DEMO_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $STG_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $PROD_ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA \
-          -t $DEMO_ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $STG_ECR_REGISTRY/$ECR_REPOSITORY:latest \
-          -t $PROD_ECR_REGISTRY/$ECR_REPOSITORY:latest .
-
-      - name: Push containers to Amazon staging ECR
-        env:
-          STG_ECR_REGISTRY: ${{ steps.login-ecr-staging.outputs.registry }}
-        run: |
-          docker push $STG_ECR_REGISTRY/covid-server/key-retrieval:$GITHUB_SHA
-          docker push $STG_ECR_REGISTRY/covid-server/key-retrieval:latest
-          docker push $STG_ECR_REGISTRY/covid-server/key-submission:$GITHUB_SHA
-          docker push $STG_ECR_REGISTRY/covid-server/key-submission:latest
-
-      - name: Logout of Staging Amazon ECR
-        if: always()
-        run: docker logout ${{ steps.login-ecr-staging.outputs.registry }}
-
-
-      - name: Configure Demo AWS credentials
-        id: aws-demo
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ca-central-1
-
-      - name: Login to Demo Amazon ECR
-        id: login-ecr-demo
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Push containers to Amazon demo ECR
-        env:
-          DEMO_ECR_REGISTRY: ${{ steps.login-ecr-demo.outputs.registry }}
-        run: |
-          docker push $DEMO_ECR_REGISTRY/covid-server/key-retrieval:$GITHUB_SHA
-          docker push $DEMO_ECR_REGISTRY/covid-server/key-retrieval:latest
-          docker push $DEMO_ECR_REGISTRY/covid-server/key-submission:$GITHUB_SHA
-          docker push $DEMO_ECR_REGISTRY/covid-server/key-submission:latest
-
-      - name: Logout of Demo Amazon ECR
-        if: always()
-        run: docker logout ${{ steps.login-ecr-demo.outputs.registry }}
-
-      - name: Configure Production AWS credentials
-        id: aws-production
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ca-central-1
-
-      - name: Login to Production Amazon ECR
-        id: login-ecr-prod
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Push all containers to production Amazon ECR
-        env:
-          PROD_ECR_REGISTRY: ${{ secrets.PROD_ECR_REGISTRY }}
-        run: |
-          docker push $PROD_ECR_REGISTRY/covid-server/key-retrieval:$GITHUB_SHA
-          docker push $PROD_ECR_REGISTRY/covid-server/key-retrieval:latest
-          docker push $PROD_ECR_REGISTRY/covid-server/key-submission:$GITHUB_SHA
-          docker push $PROD_ECR_REGISTRY/covid-server/key-submission:latest
-
-      - name: Logout of Production Amazon ECR
-        if: always()
-        run: docker logout ${{ steps.login-ecr-prod.outputs.registry }}
+          -t $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-$GITHUB_SHA \
+          -t $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-latest .
+          docker push $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-$GITHUB_SHA
+          docker push $DOCKERHUB_OWNER/$DOCKERHUB_REPO:$COMPONENT-latest
