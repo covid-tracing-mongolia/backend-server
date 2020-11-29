@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/covid-tracing-mongolia/backend-server/pkg/config"
 	"github.com/covid-tracing-mongolia/backend-server/pkg/keyclaim"
 	"github.com/covid-tracing-mongolia/backend-server/pkg/persistence"
@@ -31,6 +32,7 @@ func (s *keyClaimServlet) RegisterRouting(r *mux.Router) {
 	r.HandleFunc("/new-key-claim", s.newKeyClaim)
 	r.HandleFunc("/new-key-claim/{hashID:[0-9,a-z]{128}}", s.newKeyClaim)
 	r.HandleFunc("/claim-key", s.claimKeyWrapper)
+	r.HandleFunc("/api/count", s.countApiWrapper)
 }
 
 func (s *keyClaimServlet) newKeyClaim(w http.ResponseWriter, r *http.Request) {
@@ -209,4 +211,59 @@ func getIP(r *http.Request) string {
 		return parts[0]
 	}
 	return r.RemoteAddr
+}
+
+func (s *keyClaimServlet) countApiWrapper(w http.ResponseWriter, r *http.Request) {
+	_ = s.countApi(w, r)
+}
+
+func (s *keyClaimServlet) countApi(w http.ResponseWriter, r *http.Request) result {
+	ctx := r.Context()
+
+	if r.Method == http.MethodOptions {
+		w.Header().Add("Access-Control-Allow-Origin", config.AppConstants.CORSAccessControlAllowOrigin)
+		w.Header().Add("Access-Control-Allow-Methods", "GET")
+		w.Header().Add("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Referer, User-Agent")
+		if _, err := w.Write([]byte("")); err != nil {
+			log(ctx, err).Warn("error writing response")
+		}
+		return result{}
+	}
+
+	if r.Method != "GET" {
+		log(ctx, nil).WithField("method", r.Method).Info("disallowed method")
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return result{}
+	}
+
+	hdr := r.Header.Get("Authorization")
+	_, _, ok := s.auth.RegionFromAuthHeader(hdr)
+	if !ok {
+		log(ctx, nil).WithField("header", hdr).Info("bad auth header")
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return result{}
+	}
+
+
+	CountDiagnosisKeys, _ := s.db.CountDiagnosisKeys()
+	CountEncryptionKeys, _ := s.db.CountEncryptionKeys()
+	CountEvents, _ := s.db.CountEvents()
+	CountFailedKeyClaimAttempts, _ := s.db.CountFailedKeyClaimAttempts()
+	CountTekUploadCount, _ := s.db.CountTekUploadCount()
+	data := map[string]int64{}
+
+	data["CountDiagnosisKeys"] = CountDiagnosisKeys
+	data["CountEncryptionKeys"] = CountEncryptionKeys
+	data["CountEvents"] = CountEvents
+	data["CountFailedKeyClaimAttempts"] = CountFailedKeyClaimAttempts
+	data["CountTekUploadCount"] = CountTekUploadCount
+
+
+
+	response, _ := json.Marshal(data)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(response))
+	return result{}
 }
