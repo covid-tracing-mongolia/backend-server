@@ -19,7 +19,7 @@ var (
 func TestMain(m *testing.M)  {
 
 	// Initialise Authenticator object
-	os.Setenv("KEY_CLAIM_TOKEN", token1 +"=" + onApi + ":"+ token2 +"=302")
+	os.Setenv("KEY_CLAIM_TOKEN", token1 +"=" + onApi + ":"+ token2 +"=428")
 
 	config.InitConfig()
 	SetupLookup(keyclaim.NewAuthenticator())

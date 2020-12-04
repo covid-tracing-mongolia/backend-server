@@ -61,7 +61,7 @@ Run `make` or `make release` to build a release version of the servers.
 ```bash
 # example...
 export DATABASE_URL="root@tcp(localhost)/covidshield"
-export KEY_CLAIM_TOKEN=thisisatoken=302
+export KEY_CLAIM_TOKEN=thisisatoken=428
 
 ./build/release/key-retrieval migrate-db
 
@@ -69,7 +69,7 @@ PORT=8000 ./build/release/key-submission
 PORT=8001 ./build/release/key-retrieval
 ```
 
-Note that 302 is a [MCC](https://www.mcc-mnc.com/): 302 represents Canada.
+Note that 428 is a [MCC](https://www.mcc-mnc.com/): 428 represents Mongolia.
 
 <h3 id="run-tests">3. Run tests</h3>
 
@@ -160,7 +160,7 @@ Exécuter `make` ou `make release` pour créer une version des serveurs.
 ```bash
 # example...
 export DATABASE_URL="root@tcp(localhost)/covidshield"
-export KEY_CLAIM_TOKEN=thisisatoken=302
+export KEY_CLAIM_TOKEN=thisisatoken=428
 
 ./build/release/key-retrieval migrate-db
 
@@ -168,7 +168,7 @@ PORT=8000 ./build/release/key-submission
 PORT=8001 ./build/release/key-retrieval
 ```
 
-Notez que 302 est un [MCC](https://www.mcc-mnc.com/) : 302 représente le Canada.
+Notez que 428 est un [MCC](https://www.mcc-mnc.com/) : 428 représente le Mongolia.
 
 <h3 id="run-tests">3. Réaliser des tests</h3>
 

@@ -59,7 +59,7 @@ func (s *retrieveServlet) retrieve(w http.ResponseWriter, r *http.Request) resul
 	ctx := r.Context()
 	vars := mux.Vars(r)
 
-	/* Hardcode the region as 302 (Canada MCC)
+	/* Hardcode the region as 428 (Mongolia MCC)
 	You can see the reason for this in pkg/server/keyclaim.go
 	As stated there I'm going to open an issue to continue this work instead of just
 	relying on the hardcoded value.

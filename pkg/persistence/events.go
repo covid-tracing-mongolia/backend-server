@@ -36,7 +36,7 @@ func translateToken(token string) string {
 	region, ok := originatorLookup.Authenticate(token)
 
 	// If we forgot to map a token to a PT just return the token
-	if region == "302" {
+	if region == "428" {
 		return token
 	}
 
@@ -52,7 +52,7 @@ func translateToken(token string) string {
 func translateTokenForLogs(token string) string {
 	region, ok := originatorLookup.Authenticate(token)
 
-	if region == "302" || ok == false {
+	if region == "428" || ok == false {
 		return fmt.Sprintf("%s...%s", token[0:1], token[len(token)-1:])
 	}
 

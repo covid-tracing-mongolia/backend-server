@@ -31,4 +31,4 @@ corsAccessControlAllowOrigin: "*"
 disableCurrentDateCheckFeatureFlag: true
 enableEntirePeriodBundle: true
 
-regionCode: "302"
+regionCode: "428"

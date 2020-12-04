@@ -60,9 +60,9 @@ module Helper
       hmac = OpenSSL::HMAC.hexdigest(
         "SHA256",
         [ENV.fetch("RETRIEVE_HMAC_KEY")].pack("H*"),
-        "302:#{date_number}:#{Time.now.to_i / 3600}"
+        "428:#{date_number}:#{Time.now.to_i / 3600}"
       )
-      @ret_conn.send(method, "/retrieve/302/#{date_number}/#{hmac}")
+      @ret_conn.send(method, "/retrieve/428/#{date_number}/#{hmac}")
     end
 
     def tek(data: '1' * 16, transmission_risk_level: 3, rolling_period: 144, rolling_start_interval_number: next_rsin)
@@ -208,7 +208,7 @@ module Helper
       pid = Process.spawn(
         {
           'BIND_ADDR' => addr,
-          'KEY_CLAIM_TOKEN' => 'first-very-long-token=302:second-very-long-token=302',
+          'KEY_CLAIM_TOKEN' => 'first-very-long-token=428:second-very-long-token=428',
           'DATABASE_URL' => DATABASE_URL,
         },
         bin, STDERR => File.open('/dev/null')

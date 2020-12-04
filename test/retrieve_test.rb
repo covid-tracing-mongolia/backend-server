@@ -169,23 +169,23 @@ class RetrieveTest < MiniTest::Test
     hmac = OpenSSL::HMAC.hexdigest(
       "SHA256",
       [ENV.fetch("RETRIEVE_HMAC_KEY")].pack("H*"),
-      "302:#{dn}:#{Time.now.to_i / 3600}"
+      "428:#{dn}:#{Time.now.to_i / 3600}"
     )
 
     # success
-    resp = @ret_conn.get("/retrieve/302/#{dn}/#{hmac}")
+    resp = @ret_conn.get("/retrieve/428/#{dn}/#{hmac}")
     assert_response(resp, 200, 'application/zip')
 
     # hmac is keyed to date
-    resp = @ret_conn.get("/retrieve/302/#{dn - 1}/#{hmac}")
+    resp = @ret_conn.get("/retrieve/428/#{dn - 1}/#{hmac}")
     assert_response(resp, 401, 'text/plain; charset=utf-8', body: "unauthorized\n")
 
     # changing hmac breaks it
-    resp = @ret_conn.get("/retrieve/302/#{dn}/11112222#{hmac[8..-1]}")
+    resp = @ret_conn.get("/retrieve/428/#{dn}/11112222#{hmac[8..-1]}")
     assert_response(resp, 401, 'text/plain; charset=utf-8', body: "unauthorized\n")
 
     # hmac is required
-    resp = @ret_conn.get("/retrieve/302/#{dn}")
+    resp = @ret_conn.get("/retrieve/428/#{dn}")
     assert_response(resp, 404, 'text/plain; charset=utf-8', body: "404 page not found\n")
   end
 
@@ -274,7 +274,7 @@ class RetrieveTest < MiniTest::Test
     assert_equal([], files, "  (from #{caller[0]})")
   end
 
-  def add_key(data: '1' * 16, active_at:, submitted_at:, transmission_risk_level: 8, region: '302')
+  def add_key(data: '1' * 16, active_at:, submitted_at:, transmission_risk_level: 8, region: '428')
     add_key_explicit(
       rsin: rolling_start_interval_number(active_at),
       hour: hour_number(submitted_at),
@@ -292,7 +292,7 @@ class RetrieveTest < MiniTest::Test
     SQL
   end
 
-  def add_key_explicit(data: '1' * 16, rsin:, transmission_risk_level: 8, hour:, region: '302', rolling_period: TEK_ROLLING_PERIOD)
+  def add_key_explicit(data: '1' * 16, rsin:, transmission_risk_level: 8, hour:, region: '428', rolling_period: TEK_ROLLING_PERIOD)
     insert_key.execute(data, rsin, rolling_period, transmission_risk_level, hour, region)
   end
 
@@ -330,7 +330,7 @@ class RetrieveTest < MiniTest::Test
         signature_infos: [
           Covidshield::SignatureInfo.new(
             verification_key_version: "v1",
-            verification_key_id: "302",
+            verification_key_id: "428",
             signature_algorithm: "1.2.840.10045.4.3.2"
           ),
         ],
@@ -349,7 +349,7 @@ class RetrieveTest < MiniTest::Test
           Covidshield::TEKSignature.new(
             signature_info: Covidshield::SignatureInfo.new(
               verification_key_version: "v1",
-              verification_key_id: "302",
+              verification_key_id: "428",
               signature_algorithm: "1.2.840.10045.4.3.2"
             ),
             batch_num: 1,

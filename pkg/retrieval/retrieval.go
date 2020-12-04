@@ -21,7 +21,7 @@ const (
 var (
 	signatureAlgorithm     = "1.2.840.10045.4.3.2" // required by protocol
 	verificationKeyVersion = "v1"
-	verificationKeyID      = "302"
+	verificationKeyID      = "428"
 	binHeader              = []byte("EK Export v1    ")
 	binHeaderLength        = 16
 )
@@ -37,7 +37,7 @@ func min(a, b int) int {
 // expected/permitted to use some other identifier. It would be great to get
 // more clarity on this.
 func transformRegion(reg string) string {
-	if reg == "302" {
+	if reg == "428" {
 		return "CA"
 	}
 	return reg
