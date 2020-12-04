@@ -65,7 +65,7 @@ func TestAuthenticate(t *testing.T) {
 	os.Setenv("RETRIEVE_HMAC_KEY", validHmacKey)
 	authenticator := NewAuthenticator()
 
-	validRegion := "302"
+	validRegion := "428"
 	validDay := "18444"
 	validAuth := "448d9bfd238b34323b70175b4b385fb39d59186711049c6766fa7c890de33a12"
 

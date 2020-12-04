@@ -35,7 +35,7 @@ end
 
 class App
   KEY_RETRIEVAL_URL = "http://127.0.0.1:8001"
-  REGION = '302'
+  REGION = '428'
 
   def initialize
     @database = Database.new

@@ -241,7 +241,7 @@ func TestPersistEncryptionKey(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	defer db.Close()
 
-	region := "302"
+	region := "428"
 	originator := "randomOrigin"
 	pub, priv, _ := box.GenerateKey(rand.Reader)
 	oneTimeCode := "80311300"
@@ -295,7 +295,7 @@ func testPersistEncryptionKeyWithHashID(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	defer db.Close()
 
-	region := "302"
+	region := "428"
 	originator := "randomOrigin"
 	pub, priv, _ := box.GenerateKey(rand.Reader)
 	oneTimeCode := "80311300"
@@ -486,7 +486,7 @@ func TestDiagnosisKeysForHours(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	defer db.Close()
 
-	region := "302"
+	region := "428"
 	startHour := uint32(100)
 	endHour := uint32(200)
 	currentRollingStartIntervalNumber := int32(2651450)
@@ -500,14 +500,14 @@ func TestDiagnosisKeysForHours(t *testing.T) {
 		AND region = ?
 		ORDER BY key_data`
 
-	row := sqlmock.NewRows([]string{"region", "key_data", "rolling_start_interval_number", "rolling_period", "transmission_risk_level"}).AddRow("302", []byte{}, 2651450, 144, 4)
+	row := sqlmock.NewRows([]string{"region", "key_data", "rolling_start_interval_number", "rolling_period", "transmission_risk_level"}).AddRow("428", []byte{}, 2651450, 144, 4)
 	mock.ExpectQuery(query).WithArgs(
 		startHour,
 		endHour,
 		minRollingStartIntervalNumber,
 		region).WillReturnRows(row)
 
-	expectedResult := []byte("302")
+	expectedResult := []byte("428")
 	rows, _ := diagnosisKeysForHours(db, region, startHour, endHour, currentRollingStartIntervalNumber)
 	var receivedResult []byte
 	for rows.Next() {
@@ -527,7 +527,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 
 	pub, _, _ := box.GenerateKey(rand.Reader)
 	keys := []*pb.TemporaryExposureKey{}
-	region := "302"
+	region := "428"
 	originator := "randomOrigin"
 
 	// Roll back if table is locked
@@ -559,7 +559,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 
 	// Roll back if prepare fails
 	mock.ExpectBegin()
-	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", 1)
+	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", 1)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 	mock.ExpectPrepare(
 		`INSERT IGNORE INTO diagnosis_keys
@@ -584,7 +584,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 	hourOfSubmission := timemath.HourNumber(time.Now())
 
 	mock.ExpectBegin()
-	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", 1)
+	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", 1)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 	mock.ExpectPrepare(
 		`INSERT IGNORE INTO diagnosis_keys
@@ -618,7 +618,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 	hourOfSubmission = timemath.HourNumber(time.Now())
 
 	mock.ExpectBegin()
-	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", 1)
+	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", 1)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 
 	mock.ExpectPrepare(
@@ -659,7 +659,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 	hourOfSubmission = timemath.HourNumber(time.Now())
 
 	mock.ExpectBegin()
-	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", 3)
+	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", 3)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 
 	mock.ExpectPrepare(
@@ -722,7 +722,7 @@ func TestRegisterDiagnosisKeys(t *testing.T) {
 	hourOfSubmission = timemath.HourNumber(time.Now())
 
 	mock.ExpectBegin()
-	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", config.AppConstants.InitialRemainingKeys)
+	row = sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", config.AppConstants.InitialRemainingKeys)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 
 	mock.ExpectPrepare(

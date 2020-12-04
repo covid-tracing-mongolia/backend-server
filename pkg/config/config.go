@@ -64,7 +64,8 @@ func setDefaults() {
 	viper.SetDefault("corsAccessControlAllowOrigin", "*")
 	viper.SetDefault("disableCurrentDateCheckFeatureFlag", true)
 	viper.SetDefault("enableEntirePeriodBundle", false)
-	/// The MCC Region Code for Canada
-	viper.SetDefault("regionCode", "302")
+	/// The MCC Region Code for Mongolia
+	/// https://www.mcc-mnc.com/
+	viper.SetDefault("regionCode", "428")
 	viper.SetDefault("eventQueryRangeDates", 10)
 }

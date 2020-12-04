@@ -88,7 +88,7 @@ encryption and authorization will become invalid and be purged.
 
 ## `/retrieve/:region/:datenumber/:hmac`
 
-The `region` is an [MCC](https://www.mcc-mnc.com/) (e.g. "302" for Canada).
+The `region` is an [MCC](https://www.mcc-mnc.com/) (e.g. "428" for Mongolia).
 
 A "date number" in this system is a UTC timestamp divided (using integer division) by 86400. This
 quantity increases by 1 each day, at UTC midnight.

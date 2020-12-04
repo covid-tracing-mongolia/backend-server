@@ -36,7 +36,7 @@ func TestMin(t *testing.T) {
 
 func TestTransformRegion(t *testing.T) {
 
-	reg := "302"
+	reg := "428"
 	regBadOtherInt := "1233"
 	regBadString := "foo"
 
@@ -53,7 +53,7 @@ func TestSerializeTo(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/", nil)
 	ctx := req.Context()
 	resp := httptest.NewRecorder()
-	region := "302"
+	region := "428"
 	keys := []*pb.TemporaryExposureKey{randomTestKey(), randomTestKey()}
 	startTimestamp := time.Now()
 	endTimestamp := time.Now().Add(1 * time.Hour)

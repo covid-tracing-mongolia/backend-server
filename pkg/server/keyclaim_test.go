@@ -130,11 +130,11 @@ func TestGoodAuthToken_NoHashID(t *testing.T){
 	auth := &keyclaim.Authenticator{}
 
 	// Auth Mock
-	auth.On("Authenticate", "goodtoken").Return("302", true)
-	auth.On("RegionFromAuthHeader", "Bearer goodtoken").Return("302", "goodtoken", true)
+	auth.On("Authenticate", "goodtoken").Return("428", true)
+	auth.On("RegionFromAuthHeader", "Bearer goodtoken").Return("428", "goodtoken", true)
 
 	// DB Mock
-	db.On("NewKeyClaim", mock.Anything, "302", "goodtoken", "").Return("AAABBBCCCC", nil)
+	db.On("NewKeyClaim", mock.Anything, "428", "goodtoken", "").Return("AAABBBCCCC", nil)
 
 
 	router := buildNewKeyClaimServletRouter(db, auth)
@@ -157,12 +157,12 @@ func TestGoodAuthToken_HashID(t *testing.T) {
 	auth := &keyclaim.Authenticator{}
 
 	// Auth Mock
-	auth.On("Authenticate", "goodtoken").Return("302", true)
-	auth.On("RegionFromAuthHeader", "Bearer goodtoken").Return("302", "goodtoken", true)
+	auth.On("Authenticate", "goodtoken").Return("428", true)
+	auth.On("RegionFromAuthHeader", "Bearer goodtoken").Return("428", "goodtoken", true)
 
 	hashID := hex.EncodeToString(SHA512([]byte("abcd")))
 	// DB Mock
-	db.On("NewKeyClaim", mock.Anything, "302", "goodtoken", hashID).Return("AAABBBCCCC", nil)
+	db.On("NewKeyClaim", mock.Anything, "428", "goodtoken", hashID).Return("AAABBBCCCC", nil)
 
 	router := buildNewKeyClaimServletRouter(db, auth)
 	_, oldLog := testhelpers.SetupTestLogging(&log)
@@ -182,11 +182,11 @@ func TestGoodAuthToken_HashID(t *testing.T) {
 func Test_ErrorSavingNoHashID(t *testing.T) {
 
 	auth := &keyclaim.Authenticator{}
-	auth.On("Authenticate", "errortoken").Return("302", true)
-	auth.On("RegionFromAuthHeader", "Bearer errortoken").Return("302", "errortoken", true)
+	auth.On("Authenticate", "errortoken").Return("428", true)
+	auth.On("RegionFromAuthHeader", "Bearer errortoken").Return("428", "errortoken", true)
 
 	db := &persistence.Conn{}
-	db.On("NewKeyClaim", mock.Anything, "302", "errortoken", "").Return("", fmt.Errorf("Random error"))
+	db.On("NewKeyClaim", mock.Anything, "428", "errortoken", "").Return("", fmt.Errorf("Random error"))
 
 	router := buildNewKeyClaimServletRouter(db, auth)
 
@@ -209,12 +209,12 @@ func Test_ErrorSavingNoHashID(t *testing.T) {
 func TestNewKeyClaimErrorSavingDuplicateHashID(t *testing.T) {
 
 	auth := &keyclaim.Authenticator{}
-	auth.On("Authenticate", "errortoken").Return("302", true)
-	auth.On("RegionFromAuthHeader", "Bearer errortoken").Return("302", "errortoken", true)
+	auth.On("Authenticate", "errortoken").Return("428", true)
+	auth.On("RegionFromAuthHeader", "Bearer errortoken").Return("428", "errortoken", true)
 
 	hashID := hex.EncodeToString(SHA512([]byte("abcd")))
 	db := &persistence.Conn{}
-	db.On("NewKeyClaim", mock.Anything, "302", "errortoken", hashID).Return("", err.ErrHashIDClaimed)
+	db.On("NewKeyClaim", mock.Anything, "428", "errortoken", hashID).Return("", err.ErrHashIDClaimed)
 
 	router := buildNewKeyClaimServletRouter(db, auth)
 	hook, oldLog := testhelpers.SetupTestLogging(&log)

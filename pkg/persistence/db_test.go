@@ -119,7 +119,7 @@ func TestDBClaimKey(t *testing.T) {
 }
 
 const (
-	region     string = "302"
+	region     string = "428"
 	originator string = "randomOrigin"
 )
 
@@ -303,7 +303,7 @@ func TestNeverSucceedsWithDuplicateCodes(t *testing.T) {
 			`INSERT INTO encryption_keys
 		(region, originator, server_private_key, server_public_key, one_time_code, remaining_keys)
 		VALUES (?, ?, ?, ?, ?, ?)`).WithArgs(
-			"302",
+			"428",
 			originator,
 			AnyType{},
 			AnyType{},
@@ -496,7 +496,7 @@ func TestDBStoreKeys(t *testing.T) {
 	}
 
 	pub, _, _ := box.GenerateKey(rand.Reader)
-	region := "302"
+	region := "428"
 	originator := "randomOrigin"
 
 	keyOne := randomTestKey()
@@ -506,7 +506,7 @@ func TestDBStoreKeys(t *testing.T) {
 	hourOfSubmission := timemath.HourNumber(time.Now())
 
 	mock.ExpectBegin()
-	row := sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("302", "randomOrigin", 3)
+	row := sqlmock.NewRows([]string{"region", "originator", "remaining_keys"}).AddRow("428", "randomOrigin", 3)
 	mock.ExpectQuery(`SELECT region, originator, remaining_keys FROM encryption_keys WHERE app_public_key = ? FOR UPDATE`).WillReturnRows(row)
 
 	mock.ExpectPrepare(
@@ -570,14 +570,14 @@ func TestDBFetchKeysForHours(t *testing.T) {
 	}
 
 	// No errors
-	region := "302"
+	region := "428"
 	startHour := uint32(100)
 	endHour := uint32(200)
 	currentRollingStartIntervalNumber := int32(2651450)
 	rollingPeriod := int32(144)
 	transmissionRiskLevel := int32(4)
 
-	row := sqlmock.NewRows([]string{"region", "key_data", "rolling_start_interval_number", "rolling_period", "transmission_risk_level"}).AddRow("302", []byte{}, 2651450, 144, 4)
+	row := sqlmock.NewRows([]string{"region", "key_data", "rolling_start_interval_number", "rolling_period", "transmission_risk_level"}).AddRow("428", []byte{}, 2651450, 144, 4)
 	mock.ExpectQuery("").WillReturnRows(row)
 
 	expectedResult := []*pb.TemporaryExposureKey{

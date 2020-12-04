@@ -63,7 +63,7 @@ func TestRetrieve(t *testing.T) {
 	auth := &retrieval.Authenticator{}
 	signer := &retrieval.Signer{}
 
-	region := "302"
+	region := "428"
 	goodAuth := "abcd"
 	badAuth := "dcba"
 	currentRSIN := pb.CurrentRollingStartIntervalNumber()
