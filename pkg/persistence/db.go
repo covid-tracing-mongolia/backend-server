@@ -50,6 +50,10 @@ type Conn interface {
 	CountClaimedOneTimeCodes() (int64, error)
 	CountDiagnosisKeys() (int64, error)
 	CountUnclaimedOneTimeCodes() (int64, error)
+	CountEncryptionKeys() (int64, error)
+	CountEvents() (int64, error)
+	CountFailedKeyClaimAttempts() (int64, error)
+	CountTekUploadCount() (int64, error)
 
 	CountUnclaimedEncryptionKeysByOriginator() ([]CountByOriginator, error)
 	CountExhaustedEncryptionKeysByOriginator() ([]CountByOriginator, error)
@@ -240,7 +244,7 @@ func (c *conn) saveNewKeyClaimEvent(ctx context.Context, originator string, rege
 // set and the desired length in another function to generate the
 // string for that group.
 // 2020-11-21
-// Amarbayar: Making it convenient for Mongolians so that health 
+// Amarbayar: Making it convenient for Mongolians so that health
 // authorities only pronounce numbers and patiens submit numbers
 func generateOneTimeCode() (string, error) {
 	characterSets := [2][]rune{
@@ -350,6 +354,22 @@ func (c *conn) CountDiagnosisKeys() (int64, error) {
 
 func (c *conn) CountUnclaimedOneTimeCodes() (int64, error) {
 	return countUnclaimedOneTimeCodes(c.db)
+}
+
+func (c *conn) CountEncryptionKeys() (int64, error) {
+	return countEncryptionKeys(c.db)
+}
+
+func (c *conn) CountEvents() (int64, error) {
+	return countEvents(c.db)
+}
+
+func (c *conn) CountFailedKeyClaimAttempts() (int64, error) {
+	return countFailedKeyClaimAttempts(c.db)
+}
+
+func (c *conn) CountTekUploadCount() (int64, error) {
+	return countTekUploadCount(c.db)
 }
 
 func (c *conn) Close() error {

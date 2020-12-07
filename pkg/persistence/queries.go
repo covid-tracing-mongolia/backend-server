@@ -449,3 +449,55 @@ func countUnclaimedOneTimeCodes(db *sql.DB) (int64, error) {
 
 	return count, err
 }
+
+func countEncryptionKeys(db *sql.DB) (int64, error) {
+	var count int64
+
+	row := db.QueryRow("SELECT COUNT(*) FROM encryption_keys")
+	err := row.Scan(&count)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
+
+func countEvents(db *sql.DB) (int64, error) {
+	var count int64
+
+	row := db.QueryRow("SELECT COUNT(*) FROM events")
+	err := row.Scan(&count)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
+
+func countFailedKeyClaimAttempts(db *sql.DB) (int64, error) {
+	var count int64
+
+	row := db.QueryRow("SELECT COUNT(*) FROM failed_key_claim_attempts")
+	err := row.Scan(&count)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
+
+func countTekUploadCount(db *sql.DB) (int64, error) {
+	var count int64
+
+	row := db.QueryRow("SELECT COUNT(*) FROM tek_upload_count")
+	err := row.Scan(&count)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return count, err
+}
