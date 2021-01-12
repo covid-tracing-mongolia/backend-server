@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// CI test
+
 var log = logger.New("config")
 
 type Constants struct {
